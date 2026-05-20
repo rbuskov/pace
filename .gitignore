@@ -1,0 +1,129 @@
+# Dependencies
+node_modules/
+jspm_packages/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build output
+dist/
+build/
+out/
+release/
+app/dist/
+*.app
+*.exe
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.snap
+*.AppImage
+*.msi
+*.zip
+*.tar.gz
+*.nupkg
+*.blockmap
+
+# Electron-builder / electron-forge
+dist_electron/
+release-builds/
+.webpack/
+.vite/
+
+# Bundlers / transpilers
+.next/
+.nuxt/
+.parcel-cache/
+.cache/
+.turbo/
+.swc/
+.rollup.cache/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing / coverage
+coverage/
+.nyc_output/
+*.lcov
+.jest-cache/
+playwright-report/
+test-results/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+*.pem
+*.key
+*.p12
+*.mobileprovision
+
+# Code signing
+build/entitlements.mac.plist.bak
+*.csr
+*.cer
+
+# Editor / IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Native modules / build artifacts
+*.node
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+prebuilds/
+
+# Temporary / misc
+tmp/
+temp/
+.tmp/
+*.pid
+*.seed
+*.pid.lock
+
+# Auto-updater
+dev-app-update.yml
