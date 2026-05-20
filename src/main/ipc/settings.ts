@@ -1,5 +1,5 @@
-import type { IpcMain } from 'electron';
 import type { IpcRequest, IpcResponse } from '@shared/types';
+import type { IpcMain } from 'electron';
 import * as claudeResolver from '../claude-resolver.js';
 import * as persistence from '../persistence.js';
 

@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { simpleGit } from 'simple-git';
 import type { RepoInfo } from '@shared/types';
+import { simpleGit } from 'simple-git';
 
 export class RepoValidationError extends Error {
   constructor(message: string) {

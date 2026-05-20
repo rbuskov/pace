@@ -1,5 +1,5 @@
-import { contextBridge, ipcRenderer } from 'electron';
 import type { IpcChannel, IpcEventChannel } from '@shared/types';
+import { contextBridge, ipcRenderer } from 'electron';
 
 const home = process.env.HOME || process.env.USERPROFILE || null;
 

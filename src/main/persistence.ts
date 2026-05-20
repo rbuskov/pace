@@ -1,5 +1,5 @@
-import Store from 'electron-store';
 import { DEFAULT_SETTINGS, type PersistedState, type Settings } from '@shared/types';
+import Store from 'electron-store';
 
 const DEFAULTS: PersistedState = {
   schemaVersion: 1,

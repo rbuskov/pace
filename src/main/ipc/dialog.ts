@@ -1,5 +1,5 @@
-import { BrowserWindow, type IpcMain, dialog } from 'electron';
 import type { IpcResponse } from '@shared/types';
+import { BrowserWindow, type IpcMain, dialog } from 'electron';
 
 export function register(ipcMain: IpcMain): void {
   ipcMain.handle('dialog:pickFolder', async (evt) => {

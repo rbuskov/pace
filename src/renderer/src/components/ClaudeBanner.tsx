@@ -1,5 +1,5 @@
-import type { FC } from 'react';
 import type { ClaudeStatus } from '@shared/types';
+import type { FC } from 'react';
 
 interface Props {
   status: ClaudeStatus | null;
@@ -22,8 +22,7 @@ export const ClaudeBanner: FC<Props> = ({ status, onOpenSettings }) => {
         >
           Settings
         </button>
-        .
-        {status.error ? <span className="ml-2 text-red-300/80">({status.error})</span> : null}
+        .{status.error ? <span className="ml-2 text-red-300/80">({status.error})</span> : null}
       </span>
     </div>
   );

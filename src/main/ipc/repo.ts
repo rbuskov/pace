@@ -1,5 +1,5 @@
-import type { IpcMain } from 'electron';
 import type { IpcRequest, IpcResponse, RepoInfo } from '@shared/types';
+import type { IpcMain } from 'electron';
 import * as persistence from '../persistence.js';
 import { validateAndDescribeRepo } from '../repo-manager.js';
 

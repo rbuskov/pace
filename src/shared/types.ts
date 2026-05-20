@@ -51,20 +51,20 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export interface IpcIntents {
   'repo:select': { request: { path: string }; response: RepoInfo };
-  'repo:current': { request: void; response: RepoInfo | null };
+  'repo:current': { request: undefined; response: RepoInfo | null };
   'session:create': {
     request: { name: string; baseBranch: string; initialPrompt?: string };
     response: Session;
   };
-  'session:list': { request: void; response: Session[] };
-  'session:sendInput': { request: { id: string; text: string }; response: void };
+  'session:list': { request: undefined; response: Session[] };
+  'session:sendInput': { request: { id: string; text: string }; response: undefined };
   'session:resume': { request: { id: string }; response: Session };
-  'session:forget': { request: { id: string }; response: void };
+  'session:forget': { request: { id: string }; response: undefined };
   'session:replayBuffer': { request: { id: string }; response: string };
-  'settings:get': { request: void; response: Settings };
+  'settings:get': { request: undefined; response: Settings };
   'settings:update': { request: Partial<Settings>; response: Settings };
-  'claude:status': { request: void; response: ClaudeStatus };
-  'dialog:pickFolder': { request: void; response: string | null };
+  'claude:status': { request: undefined; response: ClaudeStatus };
+  'dialog:pickFolder': { request: undefined; response: string | null };
 }
 
 export type IpcChannel = keyof IpcIntents;

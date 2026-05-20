@@ -1,6 +1,6 @@
+import type { ClaudeStatus, RepoInfo } from '@shared/types';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
-import type { ClaudeStatus, RepoInfo } from '@shared/types';
 import { ClaudeBanner } from './components/ClaudeBanner.js';
 import { EmptyState } from './components/EmptyState.js';
 import { Header } from './components/Header.js';
@@ -51,11 +51,7 @@ export const App: FC = () => {
   return (
     <div className="flex h-full w-full flex-col bg-slate-950 text-slate-100">
       <ClaudeBanner status={claudeStatus} onOpenSettings={() => setSettingsOpen(true)} />
-      <Header
-        repo={repo}
-        onPickRepo={onPickRepo}
-        onOpenSettings={() => setSettingsOpen(true)}
-      />
+      <Header repo={repo} onPickRepo={onPickRepo} onOpenSettings={() => setSettingsOpen(true)} />
       <div className="flex min-h-0 flex-1">
         <Sidebar width={sidebarWidth} onWidthChange={setSidebarWidth} />
         <main className="min-w-0 flex-1 overflow-auto">

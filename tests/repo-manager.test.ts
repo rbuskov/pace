@@ -64,4 +64,3 @@ describe('repo-manager validation', () => {
     await expect(validateAndDescribeRepo('')).rejects.toThrow(/No path/);
   });
 });
-

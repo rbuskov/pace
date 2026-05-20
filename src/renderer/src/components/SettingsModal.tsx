@@ -1,5 +1,5 @@
-import { type FC, useEffect, useState } from 'react';
 import type { Settings } from '@shared/types';
+import { type FC, useEffect, useState } from 'react';
 import { invoke } from '../ipc-client.js';
 
 interface Props {
@@ -48,16 +48,13 @@ export const SettingsModal: FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Settings"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <dialog
+        open
+        aria-modal="true"
+        aria-label="Settings"
+        className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-5 text-slate-100 shadow-xl"
+      >
         <h2 className="mb-4 text-lg font-semibold">Settings</h2>
         <label className="block text-sm">
           <span className="mb-1 block text-slate-300">Claude binary path</span>
@@ -89,7 +86,7 @@ export const SettingsModal: FC<Props> = ({ open, onClose }) => {
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 };

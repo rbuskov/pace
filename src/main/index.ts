@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { BrowserWindow, app, ipcMain } from 'electron';
 import * as claudeResolver from './claude-resolver.js';
 import { registerAll } from './ipc/index.js';
@@ -44,7 +44,7 @@ function createMainWindow(): void {
     backgroundColor: '#0f172a',
     show: false,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,

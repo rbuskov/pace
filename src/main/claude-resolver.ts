@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { BrowserWindow } from 'electron';
 import type { ClaudeStatus } from '@shared/types';
+import type { BrowserWindow } from 'electron';
 
 const execFileAsync = promisify(execFile);
 
@@ -17,7 +17,7 @@ export function getStatus(): ClaudeStatus {
 }
 
 export async function refresh(binaryPathOverride?: string): Promise<ClaudeStatus> {
-  const binary = binaryPathOverride && binaryPathOverride.trim() ? binaryPathOverride : 'claude';
+  const binary = binaryPathOverride?.trim() ? binaryPathOverride : 'claude';
   try {
     const { stdout } = await execFileAsync(binary, ['--version'], { timeout: 10_000 });
     const version = stdout.trim() || 'unknown';

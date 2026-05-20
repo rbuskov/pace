@@ -1,5 +1,5 @@
-import type { FC } from 'react';
 import type { RepoInfo } from '@shared/types';
+import type { FC } from 'react';
 import { home } from '../ipc-client.js';
 import { displayPath } from '../util/displayPath.js';
 
@@ -18,10 +18,7 @@ export const Header: FC<Props> = ({ repo, onPickRepo, onOpenSettings }) => {
           <>
             <span className="text-slate-500">•</span>
             <span className="font-medium">{repo.name}</span>
-            <span
-              className="truncate text-slate-400"
-              title={repo.path}
-            >
+            <span className="truncate text-slate-400" title={repo.path}>
               {displayPath(repo.path, home)}
             </span>
           </>
