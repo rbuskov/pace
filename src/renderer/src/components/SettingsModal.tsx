@@ -1,0 +1,95 @@
+import { type FC, useEffect, useState } from 'react';
+import type { Settings } from '@shared/types';
+import { invoke } from '../ipc-client.js';
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+export const SettingsModal: FC<Props> = ({ open, onClose }) => {
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [claudeBinaryPath, setClaudeBinaryPath] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void invoke('settings:get').then((s) => {
+      if (cancelled) return;
+      setSettings(s);
+      setClaudeBinaryPath(s.claudeBinaryPath ?? '');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const onSave = async () => {
+    setSaving(true);
+    try {
+      const next = await invoke('settings:update', { claudeBinaryPath });
+      setSettings(next);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Settings"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl">
+        <h2 className="mb-4 text-lg font-semibold">Settings</h2>
+        <label className="block text-sm">
+          <span className="mb-1 block text-slate-300">Claude binary path</span>
+          <input
+            type="text"
+            placeholder="(use PATH lookup)"
+            value={claudeBinaryPath}
+            onChange={(e) => setClaudeBinaryPath(e.target.value)}
+            className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 focus:border-blue-500 focus:outline-none"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Leave blank to look up <code>claude</code> on your PATH.
+          </p>
+        </label>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={saving || settings === null}
+            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
