@@ -91,94 +91,95 @@ export const NewSessionForm: FC<Props> = ({ open, repo, existingNames, onClose, 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <form
-        onSubmit={handleSubmit}
-        role="dialog"
+      <dialog
+        open
         aria-modal="true"
         aria-labelledby="new-session-title"
-        className="w-full max-w-lg rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl"
+        className="w-full max-w-lg rounded-lg border border-slate-700 bg-slate-900 p-5 text-slate-100 shadow-xl"
       >
-        <h2 id="new-session-title" className="mb-4 text-base font-semibold">
-          New Session
-        </h2>
+        <form onSubmit={handleSubmit}>
+          <h2 id="new-session-title" className="mb-4 text-base font-semibold">
+            New Session
+          </h2>
 
-        <label className="mb-3 block">
-          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">
-            Name
-          </span>
-          <input
-            ref={nameRef}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="add-readme"
-            spellCheck={false}
-            autoComplete="off"
-            className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-            aria-invalid={nameError !== null}
-            aria-describedby={nameError ? 'name-error' : undefined}
-          />
-          {nameError ? (
-            <p id="name-error" role="alert" className="mt-1 text-xs text-red-400">
-              {nameError}
+          <label className="mb-3 block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">
+              Name
+            </span>
+            <input
+              ref={nameRef}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="add-readme"
+              spellCheck={false}
+              autoComplete="off"
+              className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+              aria-invalid={nameError !== null}
+              aria-describedby={nameError ? 'name-error' : undefined}
+            />
+            {nameError ? (
+              <p id="name-error" role="alert" className="mt-1 text-xs text-red-400">
+                {nameError}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-slate-500">
+                Used as the branch name and worktree directory.
+              </p>
+            )}
+          </label>
+
+          <label className="mb-3 block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">
+              Base branch
+            </span>
+            <input
+              value={baseBranch}
+              onChange={(e) => setBaseBranch(e.target.value)}
+              placeholder={repo.defaultBranch}
+              spellCheck={false}
+              autoComplete="off"
+              className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+            />
+          </label>
+
+          <label className="mb-4 block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">
+              Initial prompt
+            </span>
+            <textarea
+              value={initialPrompt}
+              onChange={(e) => setInitialPrompt(e.target.value)}
+              rows={4}
+              placeholder="Add a README explaining the project"
+              className="w-full resize-y rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+            />
+          </label>
+
+          {submitError ? (
+            <p role="alert" className="mb-3 text-sm text-red-400">
+              {submitError}
             </p>
-          ) : (
-            <p className="mt-1 text-xs text-slate-500">
-              Used as the branch name and worktree directory.
-            </p>
-          )}
-        </label>
+          ) : null}
 
-        <label className="mb-3 block">
-          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">
-            Base branch
-          </span>
-          <input
-            value={baseBranch}
-            onChange={(e) => setBaseBranch(e.target.value)}
-            placeholder={repo.defaultBranch}
-            spellCheck={false}
-            autoComplete="off"
-            className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </label>
-
-        <label className="mb-4 block">
-          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">
-            Initial prompt
-          </span>
-          <textarea
-            value={initialPrompt}
-            onChange={(e) => setInitialPrompt(e.target.value)}
-            rows={4}
-            placeholder="Add a README explaining the project"
-            className="w-full resize-y rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </label>
-
-        {submitError ? (
-          <p role="alert" className="mb-3 text-sm text-red-400">
-            {submitError}
-          </p>
-        ) : null}
-
-        <div className="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={submitting || nameError !== null || name.length === 0}
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {submitting ? 'Creating…' : 'Create'}
-          </button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || nameError !== null || name.length === 0}
+              className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {submitting ? 'Creating…' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </dialog>
     </div>
   );
 };

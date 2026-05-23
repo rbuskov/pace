@@ -57,26 +57,14 @@ export async function createWorktree(opts: CreateWorktreeOptions): Promise<Creat
     );
   }
 
-  // Pre-flight: branch name must not already exist (local or remote-tracking).
-  // `show-ref --verify` returns non-zero if the ref is missing, which is what we want.
-  const refsToCheck = [`refs/heads/${name}`];
-  for (const ref of refsToCheck) {
-    try {
-      await git.raw(['show-ref', '--verify', '--quiet', ref]);
-      // No throw means the ref exists.
-      throw new WorktreeError('branch-exists', `Branch "${name}" already exists.`);
-    } catch (err) {
-      if (err instanceof WorktreeError) throw err;
-      // Otherwise show-ref exited non-zero → the ref doesn't exist, which is fine.
-    }
-  }
-
+  // Branch-existence is delegated to `git worktree add` itself, which fails
+  // cleanly with "fatal: a branch named '<name>' already exists".
   try {
     await git.raw(['worktree', 'add', worktreePath, '-b', name, baseBranch]);
   } catch (err) {
     const msg = (err as Error).message || '';
-    if (/already exists/i.test(msg) && /branch/i.test(msg)) {
-      throw new WorktreeError('branch-exists', msg);
+    if (/a branch named .* already exists/i.test(msg) || /branch .* already exists/i.test(msg)) {
+      throw new WorktreeError('branch-exists', `Branch "${name}" already exists.`);
     }
     if (/already exists/i.test(msg)) {
       throw new WorktreeError('worktree-path-exists', msg);
