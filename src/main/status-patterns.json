@@ -1,0 +1,22 @@
+{
+  "awaitingInputPatterns": [
+    "Do you want to proceed\\?",
+    "Do you want to make this edit",
+    "Do you want to create",
+    "❯\\s*\\d+\\.\\s*Yes",
+    "❯\\s*\\d+\\.\\s*No",
+    "\\(y/n\\)",
+    "\\(Y/n\\)",
+    "\\(y/N\\)",
+    "\\[y/N\\]",
+    "\\[Y/n\\]",
+    "Press\\s+(?:Enter|<enter>)\\s+to\\s+continue",
+    "Continue\\?\\s*\\(y"
+  ],
+  "spinnerGlyphs": "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏⡏⠟⠻⠽⠾⠷",
+  "workingHints": [
+    "esc to interrupt",
+    "ctrl\\+c to interrupt",
+    "ctrl-c to interrupt"
+  ]
+}
