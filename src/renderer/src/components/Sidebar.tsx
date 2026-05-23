@@ -1,14 +1,30 @@
+import type { Session } from '@shared/types';
 import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 
 interface Props {
   width: number;
   onWidthChange: (next: number) => void;
+  sessions: Session[];
+  activeSessionId: string | null;
+  onSelectSession: (id: string) => void;
+  onNewSession: () => void;
+  canCreateSession: boolean;
+  newSessionDisabledReason?: string;
 }
 
 const MIN = 240;
 const MAX = 480;
 
-export const Sidebar: FC<Props> = ({ width, onWidthChange }) => {
+export const Sidebar: FC<Props> = ({
+  width,
+  onWidthChange,
+  sessions,
+  activeSessionId,
+  onSelectSession,
+  onNewSession,
+  canCreateSession,
+  newSessionDisabledReason,
+}) => {
   const [dragging, setDragging] = useState(false);
   const startXRef = useRef(0);
   const startWidthRef = useRef(width);
@@ -44,9 +60,45 @@ export const Sidebar: FC<Props> = ({ width, onWidthChange }) => {
       style={{ width }}
       className="relative flex h-full shrink-0 flex-col border-r border-slate-800 bg-slate-900"
     >
-      <div className="px-3 py-2 text-xs uppercase tracking-wide text-slate-500">Sessions</div>
-      <div className="flex-1 overflow-y-auto px-3 py-2 text-sm text-slate-400">
-        (no sessions yet)
+      <div className="flex items-center justify-between px-3 py-2">
+        <span className="text-xs uppercase tracking-wide text-slate-500">Sessions</span>
+        <button
+          type="button"
+          onClick={onNewSession}
+          disabled={!canCreateSession}
+          title={canCreateSession ? 'New session (Cmd/Ctrl+N)' : newSessionDisabledReason}
+          aria-label="New session"
+          className="rounded bg-blue-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+        >
+          + New Session
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-2 py-1">
+        {sessions.length === 0 ? (
+          <p className="px-1 text-sm text-slate-500">(no sessions yet)</p>
+        ) : (
+          <ul className="flex flex-col gap-0.5">
+            {sessions.map((s) => {
+              const active = s.id === activeSessionId;
+              return (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectSession(s.id)}
+                    className={`flex w-full flex-col rounded px-2 py-1.5 text-left text-sm transition-colors ${
+                      active ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="truncate font-medium">{s.name}</span>
+                    <span className="text-xs text-slate-500">
+                      {s.ptyAlive ? '(running)' : '(exited)'}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
       <button
         type="button"

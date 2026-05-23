@@ -7,6 +7,10 @@ import { validateAndDescribeRepo } from '../repo-manager.js';
 // on demand if we don't have it (e.g. fresh launch).
 let currentRepo: RepoInfo | null = null;
 
+export function getCurrentRepoPath(): string | null {
+  return currentRepo?.path ?? persistence.getRepoPath();
+}
+
 export function register(ipcMain: IpcMain): void {
   ipcMain.handle('repo:select', async (_evt, payload: IpcRequest<'repo:select'>) => {
     const info = await validateAndDescribeRepo(payload.path);

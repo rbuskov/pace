@@ -2,6 +2,7 @@ import type { IpcMain } from 'electron';
 import * as claude from './claude.js';
 import * as dialog from './dialog.js';
 import * as repo from './repo.js';
+import * as session from './session.js';
 import * as settings from './settings.js';
 
 export function registerAll(ipcMain: IpcMain): void {
@@ -9,4 +10,5 @@ export function registerAll(ipcMain: IpcMain): void {
   settings.register(ipcMain);
   claude.register(ipcMain);
   dialog.register(ipcMain);
+  session.register(ipcMain);
 }

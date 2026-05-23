@@ -15,9 +15,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@homebridge/node-pty-prebuilt-multiarch": "^0.13.1",
     "electron-store": "^10.0.0",
     "simple-git": "^3.25.0",
-    "sonner": "^1.7.0"
+    "sonner": "^1.7.0",
+    "xterm": "5",
+    "xterm-addon-fit": "^0.8.0",
+    "xterm-addon-web-links": "^0.9.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
