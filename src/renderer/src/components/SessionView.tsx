@@ -8,6 +8,8 @@ import { invoke, on } from '../ipc-client.js';
 
 interface Props {
   session: Session;
+  getScrollPosition: (id: string) => number | undefined;
+  saveScrollPosition: (id: string, line: number) => void;
 }
 
 // Slate-950 background; everything else inherits from the user's claude theme.
@@ -21,9 +23,8 @@ const TERMINAL_THEME = {
 
 const RESIZE_THROTTLE_MS = 50;
 
-export const SessionView: FC<Props> = ({ session }) => {
+export const SessionView: FC<Props> = ({ session, getScrollPosition, saveScrollPosition }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  // Bumping this key when the session id changes forces a fresh terminal.
   const sessionId = session.id;
 
   useEffect(() => {
@@ -80,23 +81,47 @@ export const SessionView: FC<Props> = ({ session }) => {
       }
     });
 
-    // Replay any buffered output before live data starts streaming. The PTY
-    // started before this view mounted, so there may be a splash already in
-    // the rolling buffer.
+    // Replay rolling buffer, then resize PTY to current dimensions and restore
+    // scroll position from before this session was last blurred (if any).
     void invoke('session:replayBuffer', { id: sessionId }).then((buffered) => {
       if (buffered) term.write(buffered);
+      try {
+        fit.fit();
+        const { cols, rows } = term;
+        void invoke('session:resize', { id: sessionId, cols, rows });
+      } catch {
+        // ignore
+      }
+      const savedLine = getScrollPosition(sessionId);
+      if (savedLine !== undefined) {
+        // xterm.js writes are buffered; defer the scroll until they're applied.
+        queueMicrotask(() => {
+          try {
+            term.scrollToLine(savedLine);
+          } catch {
+            // ignore
+          }
+        });
+      }
     });
 
     term.focus();
 
     return () => {
       if (resizeTimer) clearTimeout(resizeTimer);
+      // Capture scroll position before disposing so a future remount can
+      // restore the viewport.
+      try {
+        saveScrollPosition(sessionId, term.buffer.active.viewportY);
+      } catch {
+        // ignore
+      }
       ro.disconnect();
       dataDisp.dispose();
       offOutput();
       term.dispose();
     };
-  }, [sessionId]);
+  }, [sessionId, getScrollPosition, saveScrollPosition]);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-950">

@@ -51,4 +51,14 @@ export function register(ipcMain: IpcMain): void {
       ) satisfies IpcResponse<'session:replayBuffer'>;
     },
   );
+
+  ipcMain.handle('session:close', async (_evt, payload: IpcRequest<'session:close'>) => {
+    await sessionManager.closeSession(payload.id);
+    return undefined satisfies IpcResponse<'session:close'>;
+  });
+
+  ipcMain.handle('session:closeAll', async () => {
+    await sessionManager.closeAll();
+    return undefined satisfies IpcResponse<'session:closeAll'>;
+  });
 }

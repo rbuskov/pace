@@ -6,7 +6,12 @@ interface Props {
   repo: RepoInfo;
   existingNames: string[];
   onClose: () => void;
-  onSubmit: (values: { name: string; baseBranch: string; initialPrompt: string }) => Promise<void>;
+  onSubmit: (values: {
+    name: string;
+    baseBranch: string;
+    initialPrompt: string;
+    switchToNew: boolean;
+  }) => Promise<void>;
 }
 
 const SLUG_RE = /^[a-z0-9][a-z0-9._-]*$/;
@@ -25,6 +30,7 @@ export const NewSessionForm: FC<Props> = ({ open, repo, existingNames, onClose, 
   const [name, setName] = useState('');
   const [baseBranch, setBaseBranch] = useState(repo.defaultBranch);
   const [initialPrompt, setInitialPrompt] = useState('');
+  const [switchToNew, setSwitchToNew] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement | null>(null);
@@ -35,6 +41,7 @@ export const NewSessionForm: FC<Props> = ({ open, repo, existingNames, onClose, 
       setName('');
       setBaseBranch(repo.defaultBranch);
       setInitialPrompt('');
+      setSwitchToNew(true);
       setSubmitting(false);
       setSubmitError(null);
       // Focus the name field once the modal mounts.
@@ -72,13 +79,13 @@ export const NewSessionForm: FC<Props> = ({ open, repo, existingNames, onClose, 
       setSubmitting(true);
       setSubmitError(null);
       try {
-        await onSubmit({ name, baseBranch: baseBranch.trim(), initialPrompt });
+        await onSubmit({ name, baseBranch: baseBranch.trim(), initialPrompt, switchToNew });
       } catch (e2) {
         setSubmitError((e2 as Error).message ?? 'Failed to create session.');
         setSubmitting(false);
       }
     },
-    [name, baseBranch, initialPrompt, existingNames, onSubmit],
+    [name, baseBranch, initialPrompt, switchToNew, existingNames, onSubmit],
   );
 
   if (!open) return null;
@@ -153,6 +160,16 @@ export const NewSessionForm: FC<Props> = ({ open, repo, existingNames, onClose, 
               placeholder="Add a README explaining the project"
               className="w-full resize-y rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
             />
+          </label>
+
+          <label className="mb-4 flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={switchToNew}
+              onChange={(e) => setSwitchToNew(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-slate-600 bg-slate-950"
+            />
+            Switch to new session
           </label>
 
           {submitError ? (

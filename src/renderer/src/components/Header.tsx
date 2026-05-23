@@ -5,11 +5,12 @@ import { displayPath } from '../util/displayPath.js';
 
 interface Props {
   repo: RepoInfo | null;
+  sessionCount: number;
   onPickRepo: () => void;
   onOpenSettings: () => void;
 }
 
-export const Header: FC<Props> = ({ repo, onPickRepo, onOpenSettings }) => {
+export const Header: FC<Props> = ({ repo, sessionCount, onPickRepo, onOpenSettings }) => {
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 text-sm">
       <div className="flex min-w-0 items-center gap-3">
@@ -18,6 +19,11 @@ export const Header: FC<Props> = ({ repo, onPickRepo, onOpenSettings }) => {
           <>
             <span className="text-slate-500">•</span>
             <span className="font-medium">{repo.name}</span>
+            <span className="text-slate-500">·</span>
+            <span className="text-slate-400">
+              {sessionCount} {sessionCount === 1 ? 'session' : 'sessions'}
+            </span>
+            <span className="text-slate-500">·</span>
             <span className="truncate text-slate-400" title={repo.path}>
               {displayPath(repo.path, home)}
             </span>

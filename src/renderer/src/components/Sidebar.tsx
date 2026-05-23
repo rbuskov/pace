@@ -1,5 +1,6 @@
 import type { Session } from '@shared/types';
 import { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import { formatRelative } from '../util/relativeTime.js';
 
 interface Props {
   width: number;
@@ -10,6 +11,8 @@ interface Props {
   onNewSession: () => void;
   canCreateSession: boolean;
   newSessionDisabledReason?: string;
+  unreadIds: ReadonlySet<string>;
+  now: number;
 }
 
 const MIN = 240;
@@ -24,6 +27,8 @@ export const Sidebar: FC<Props> = ({
   onNewSession,
   canCreateSession,
   newSessionDisabledReason,
+  unreadIds,
+  now,
 }) => {
   const [dragging, setDragging] = useState(false);
   const startXRef = useRef(0);
@@ -80,18 +85,37 @@ export const Sidebar: FC<Props> = ({
           <ul className="flex flex-col gap-0.5">
             {sessions.map((s) => {
               const active = s.id === activeSessionId;
+              const unread = !active && unreadIds.has(s.id);
               return (
                 <li key={s.id}>
                   <button
                     type="button"
                     onClick={() => onSelectSession(s.id)}
                     className={`flex w-full flex-col rounded px-2 py-1.5 text-left text-sm transition-colors ${
-                      active ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-800'
+                      active
+                        ? 'bg-slate-700 text-white'
+                        : unread
+                          ? 'bg-slate-800/60 text-slate-100 hover:bg-slate-800'
+                          : 'text-slate-300 hover:bg-slate-800'
                     }`}
                   >
-                    <span className="truncate font-medium">{s.name}</span>
-                    <span className="text-xs text-slate-500">
-                      {s.ptyAlive ? '(running)' : '(exited)'}
+                    <span className="flex items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+                          s.ptyAlive ? 'bg-emerald-500' : 'bg-slate-600'
+                        }`}
+                      />
+                      <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
+                      {unread ? (
+                        <span
+                          aria-label="unread output"
+                          className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400"
+                        />
+                      ) : null}
+                    </span>
+                    <span className="mt-0.5 pl-4 text-xs text-slate-500">
+                      {s.ptyAlive ? formatRelative(s.lastActivityAt, now) : '(exited)'}
                     </span>
                   </button>
                 </li>
