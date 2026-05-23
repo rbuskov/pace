@@ -10,10 +10,58 @@ const ROLLING_BUFFER_BYTES = 256 * 1024;
 const PROMPT_WRITE_DELAY_MS = 250;
 const KILL_FALLBACK_MS = 2000;
 
+// Fixed-size ring buffer over a Node Buffer with a write cursor. Older bytes
+// are overwritten in place; reading reconstructs the in-order tail.
+class RollingBuffer {
+  private readonly buf: Buffer;
+  private cursor = 0;
+  private filled = false;
+
+  constructor(size: number) {
+    this.buf = Buffer.alloc(size);
+  }
+
+  write(chunk: string): void {
+    const bytes = Buffer.from(chunk, 'utf8');
+    const cap = this.buf.length;
+    if (bytes.length === 0) return;
+    if (bytes.length >= cap) {
+      bytes.subarray(bytes.length - cap).copy(this.buf, 0);
+      this.cursor = 0;
+      this.filled = true;
+      return;
+    }
+    const space = cap - this.cursor;
+    if (bytes.length <= space) {
+      bytes.copy(this.buf, this.cursor);
+      this.cursor += bytes.length;
+      if (this.cursor === cap) {
+        this.cursor = 0;
+        this.filled = true;
+      }
+    } else {
+      bytes.subarray(0, space).copy(this.buf, this.cursor);
+      const rest = bytes.subarray(space);
+      rest.copy(this.buf, 0);
+      this.cursor = rest.length;
+      this.filled = true;
+    }
+  }
+
+  read(): string {
+    if (!this.filled) {
+      return this.buf.subarray(0, this.cursor).toString('utf8');
+    }
+    return Buffer.concat([this.buf.subarray(this.cursor), this.buf.subarray(0, this.cursor)]).toString(
+      'utf8',
+    );
+  }
+}
+
 interface SessionEntry {
   session: Session;
   pty: IPty | null;
-  buffer: string;
+  buffer: RollingBuffer;
 }
 
 const sessions = new Map<string, SessionEntry>();
@@ -28,7 +76,7 @@ export function listSessions(): Session[] {
 }
 
 export function getReplayBuffer(id: string): string {
-  return sessions.get(id)?.buffer ?? '';
+  return sessions.get(id)?.buffer.read() ?? '';
 }
 
 export class SessionCreateError extends Error {
@@ -113,14 +161,11 @@ export async function createSession(opts: CreateSessionOptions): Promise<Session
     initialPrompt,
   };
 
-  const entry: SessionEntry = { session, pty, buffer: '' };
+  const entry: SessionEntry = { session, pty, buffer: new RollingBuffer(ROLLING_BUFFER_BYTES) };
   sessions.set(id, entry);
 
   pty.onData((chunk) => {
-    entry.buffer += chunk;
-    if (entry.buffer.length > ROLLING_BUFFER_BYTES) {
-      entry.buffer = entry.buffer.slice(entry.buffer.length - ROLLING_BUFFER_BYTES);
-    }
+    entry.buffer.write(chunk);
     entry.session.lastActivityAt = Date.now();
     broadcast('session:output', { id, chunk });
   });
@@ -163,6 +208,49 @@ export function resize(id: string, cols: number, rows: number): void {
   }
 }
 
+export async function closeSession(id: string): Promise<void> {
+  const entry = sessions.get(id);
+  if (!entry) return;
+  await killEntry(entry);
+  sessions.delete(id);
+  broadcast('session:removed', { id });
+}
+
+export async function closeAll(): Promise<void> {
+  await shutdownAll();
+  const ids = Array.from(sessions.keys());
+  sessions.clear();
+  for (const id of ids) {
+    broadcast('session:removed', { id });
+  }
+}
+
+async function killEntry(entry: SessionEntry): Promise<void> {
+  const pty = entry.pty;
+  if (!pty) return;
+  try {
+    pty.kill('SIGTERM');
+  } catch {
+    // ignore
+  }
+  await new Promise<void>((resolve) => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      if (entry.pty === null || Date.now() - start >= KILL_FALLBACK_MS) {
+        clearInterval(interval);
+        if (entry.pty) {
+          try {
+            entry.pty.kill('SIGKILL');
+          } catch {
+            // ignore
+          }
+        }
+        resolve();
+      }
+    }, 100);
+  });
+}
+
 export async function shutdownAll(): Promise<void> {
   const ptys = Array.from(sessions.values())
     .map((e) => e.pty)
@@ -200,7 +288,12 @@ export async function shutdownAll(): Promise<void> {
 }
 
 function broadcast<
-  C extends 'session:output' | 'session:exit' | 'session:added' | 'session:updated',
+  C extends
+    | 'session:output'
+    | 'session:exit'
+    | 'session:added'
+    | 'session:updated'
+    | 'session:removed',
 >(channel: C, payload: unknown): void {
   if (mainWindowRef && !mainWindowRef.isDestroyed()) {
     mainWindowRef.webContents.send(channel, payload);

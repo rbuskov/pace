@@ -67,6 +67,8 @@ export interface IpcIntents {
   'session:resize': { request: { id: string; cols: number; rows: number }; response: undefined };
   'session:resume': { request: { id: string }; response: Session };
   'session:forget': { request: { id: string }; response: undefined };
+  'session:close': { request: { id: string }; response: undefined };
+  'session:closeAll': { request: undefined; response: undefined };
   'session:replayBuffer': { request: { id: string }; response: string };
   'settings:get': { request: undefined; response: Settings };
   'settings:update': { request: Partial<Settings>; response: Settings };
@@ -84,6 +86,7 @@ export interface IpcEvents {
   'session:exit': { id: string; code: number };
   'session:added': { session: Session };
   'session:updated': { session: Session };
+  'session:removed': { id: string };
   'claude:status-changed': ClaudeStatus;
 }
 
