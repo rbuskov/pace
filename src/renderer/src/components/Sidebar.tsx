@@ -1,6 +1,7 @@
 import type { Session } from '@shared/types';
 import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { formatRelative } from '../util/relativeTime.js';
+import { StatusBadge } from './StatusBadge.js';
 
 interface Props {
   width: number;
@@ -12,6 +13,7 @@ interface Props {
   canCreateSession: boolean;
   newSessionDisabledReason?: string;
   unreadIds: ReadonlySet<string>;
+  flashIds: ReadonlySet<string>;
   now: number;
 }
 
@@ -28,6 +30,7 @@ export const Sidebar: FC<Props> = ({
   canCreateSession,
   newSessionDisabledReason,
   unreadIds,
+  flashIds,
   now,
 }) => {
   const [dragging, setDragging] = useState(false);
@@ -86,12 +89,15 @@ export const Sidebar: FC<Props> = ({
             {sessions.map((s) => {
               const active = s.id === activeSessionId;
               const unread = !active && unreadIds.has(s.id);
+              const flash = !active && flashIds.has(s.id);
               return (
                 <li key={s.id}>
                   <button
                     type="button"
                     onClick={() => onSelectSession(s.id)}
-                    className={`flex w-full flex-col rounded px-2 py-1.5 text-left text-sm transition-colors ${
+                    className={`flex w-full flex-col rounded border px-2 py-1.5 text-left text-sm transition-colors ${
+                      flash ? 'border-amber-400 pace-flash' : 'border-transparent'
+                    } ${
                       active
                         ? 'bg-slate-700 text-white'
                         : unread
@@ -100,12 +106,7 @@ export const Sidebar: FC<Props> = ({
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <span
-                        aria-hidden="true"
-                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${
-                          s.ptyAlive ? 'bg-emerald-500' : 'bg-slate-600'
-                        }`}
-                      />
+                      <StatusBadge status={s.status} ptyAlive={s.ptyAlive} />
                       <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
                       {unread ? (
                         <span

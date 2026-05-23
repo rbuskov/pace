@@ -1,14 +1,19 @@
 import { randomUUID } from 'node:crypto';
 import { type IPty, spawn as ptySpawn } from '@homebridge/node-pty-prebuilt-multiarch';
-import type { Session } from '@shared/types';
-import type { BrowserWindow } from 'electron';
+import type { Session, SessionStatus } from '@shared/types';
+import { type BrowserWindow, Notification } from 'electron';
 import * as claudeResolver from './claude-resolver.js';
 import * as persistence from './persistence.js';
+import { StatusEngine } from './status-detector.js';
 import * as worktreeManager from './worktree-manager.js';
 
 const ROLLING_BUFFER_BYTES = 256 * 1024;
 const PROMPT_WRITE_DELAY_MS = 250;
 const KILL_FALLBACK_MS = 2000;
+
+// Cadence for tick-based re-evaluation. Drives idle-after-quiet transitions
+// without waiting for a new PTY chunk that may never come.
+const STATUS_TICK_MS = 250;
 
 // Fixed-size ring buffer over a Node Buffer with a write cursor. Older bytes
 // are overwritten in place; reading reconstructs the in-order tail.
@@ -63,10 +68,51 @@ interface SessionEntry {
   session: Session;
   pty: IPty | null;
   buffer: RollingBuffer;
+  statusEngine: StatusEngine;
 }
 
 const sessions = new Map<string, SessionEntry>();
 let mainWindowRef: BrowserWindow | null = null;
+let statusTickHandle: NodeJS.Timeout | null = null;
+
+function startStatusTicker(): void {
+  if (statusTickHandle) return;
+  statusTickHandle = setInterval(() => {
+    if (sessions.size === 0) return;
+    const now = Date.now();
+    for (const entry of sessions.values()) {
+      const r = entry.statusEngine.tick(now);
+      if (r.changed) commitStatus(entry, r.status);
+    }
+  }, STATUS_TICK_MS);
+  if (typeof statusTickHandle.unref === 'function') statusTickHandle.unref();
+}
+
+function commitStatus(entry: SessionEntry, status: SessionStatus): void {
+  const previous = entry.session.status;
+  if (previous === status) return;
+  entry.session.status = status;
+  broadcast('session:status-changed', { id: entry.session.id, status });
+  broadcast('session:updated', { session: { ...entry.session } });
+  // Optional desktop notification on idle → awaiting-input. Anything else
+  // (working → awaiting-input mid-stream) doesn't fire — the user is
+  // already engaged with the session.
+  if (
+    status === 'awaiting-input' &&
+    previous === 'idle' &&
+    persistence.getSettings().notifyOnAwaitingInput &&
+    Notification.isSupported()
+  ) {
+    try {
+      new Notification({
+        title: 'Pace',
+        body: `${entry.session.name} is awaiting input`,
+      }).show();
+    } catch {
+      // Notification surface failures are non-fatal.
+    }
+  }
+}
 
 export function setMainWindow(win: BrowserWindow | null): void {
   mainWindowRef = win;
@@ -162,13 +208,22 @@ export async function createSession(opts: CreateSessionOptions): Promise<Session
     initialPrompt,
   };
 
-  const entry: SessionEntry = { session, pty, buffer: new RollingBuffer(ROLLING_BUFFER_BYTES) };
+  const entry: SessionEntry = {
+    session,
+    pty,
+    buffer: new RollingBuffer(ROLLING_BUFFER_BYTES),
+    statusEngine: new StatusEngine(),
+  };
   sessions.set(id, entry);
+  startStatusTicker();
 
   pty.onData((chunk) => {
     entry.buffer.write(chunk);
-    entry.session.lastActivityAt = Date.now();
+    const now = Date.now();
+    entry.session.lastActivityAt = now;
     broadcast('session:output', { id, chunk });
+    const r = entry.statusEngine.feed(chunk, now);
+    if (r.changed) commitStatus(entry, r.status);
   });
 
   pty.onExit(({ exitCode }) => {
@@ -215,6 +270,7 @@ export async function closeSession(id: string): Promise<void> {
   await killEntry(entry);
   sessions.delete(id);
   broadcast('session:removed', { id });
+  stopTickerIfIdle();
 }
 
 export async function closeAll(): Promise<void> {
@@ -223,6 +279,14 @@ export async function closeAll(): Promise<void> {
   sessions.clear();
   for (const id of ids) {
     broadcast('session:removed', { id });
+  }
+  stopTickerIfIdle();
+}
+
+function stopTickerIfIdle(): void {
+  if (sessions.size === 0 && statusTickHandle) {
+    clearInterval(statusTickHandle);
+    statusTickHandle = null;
   }
 }
 
@@ -294,7 +358,8 @@ function broadcast<
     | 'session:exit'
     | 'session:added'
     | 'session:updated'
-    | 'session:removed',
+    | 'session:removed'
+    | 'session:status-changed',
 >(channel: C, payload: unknown): void {
   if (mainWindowRef && !mainWindowRef.isDestroyed()) {
     mainWindowRef.webContents.send(channel, payload);

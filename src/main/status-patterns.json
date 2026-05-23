@@ -14,9 +14,5 @@
     "Continue\\?\\s*\\(y"
   ],
   "spinnerGlyphs": "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏⡏⠟⠻⠽⠾⠷",
-  "workingHints": [
-    "esc to interrupt",
-    "ctrl\\+c to interrupt",
-    "ctrl-c to interrupt"
-  ]
+  "workingHints": ["esc to interrupt", "ctrl\\+c to interrupt", "ctrl-c to interrupt"]
 }

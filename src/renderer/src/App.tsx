@@ -30,6 +30,7 @@ export const App: FC = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [unreadIds, setUnreadIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [flashIds, setFlashIds] = useState<ReadonlySet<string>>(() => new Set());
   const [now, setNow] = useState(() => Date.now());
   const [confirmRepoSwitch, setConfirmRepoSwitch] = useState(false);
 
@@ -86,8 +87,35 @@ export const App: FC = () => {
         next.delete(id);
         return next;
       });
+      setFlashIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       scrollPositionsRef.current.delete(id);
       setActiveSessionId((curr) => (curr === id ? null : curr));
+    });
+    const offStatus = on('session:status-changed', ({ id, status }) => {
+      // session:updated already carries the new status, but listening here lets
+      // us trigger the attention flash on the specific transition we care about
+      // (idle → awaiting-input on a non-focused row).
+      if (status === 'awaiting-input' && activeRef.current !== id) {
+        setFlashIds((prev) => {
+          if (prev.has(id)) return prev;
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
+        setTimeout(() => {
+          setFlashIds((prev) => {
+            if (!prev.has(id)) return prev;
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        }, 4000);
+      }
     });
     const offOutput = on('session:output', ({ id }) => {
       // Bump lastActivityAt locally for snappy timestamp updates without
@@ -120,8 +148,16 @@ export const App: FC = () => {
       offExit();
       offRemoved();
       offOutput();
+      offStatus();
     };
   }, []);
+
+  // Aggregate window title — "Pace · N awaiting input" when any sessions are
+  // waiting on a confirmation, otherwise plain.
+  useEffect(() => {
+    const awaiting = sessions.filter((s) => s.ptyAlive && s.status === 'awaiting-input').length;
+    document.title = awaiting > 0 ? `Pace · ${awaiting} awaiting input` : 'Pace';
+  }, [sessions]);
 
   // Soft warning toast the first time live sessions cross 10 in a run.
   useEffect(() => {
@@ -149,6 +185,12 @@ export const App: FC = () => {
   const selectSession = useCallback((id: string) => {
     setActiveSessionId(id);
     setUnreadIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setFlashIds((prev) => {
       if (!prev.has(id)) return prev;
       const next = new Set(prev);
       next.delete(id);
@@ -220,6 +262,7 @@ export const App: FC = () => {
     // defensively here too, in case any race leaves a row stale.
     setSessions([]);
     setUnreadIds(new Set());
+    setFlashIds(new Set());
     setActiveSessionId(null);
     scrollPositionsRef.current.clear();
     await doPickRepo();
@@ -273,6 +316,7 @@ export const App: FC = () => {
           canCreateSession={canCreateSession}
           newSessionDisabledReason={newSessionDisabledReason}
           unreadIds={unreadIds}
+          flashIds={flashIds}
           now={now}
         />
         <main className="min-w-0 flex-1">

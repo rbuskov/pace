@@ -10,6 +10,7 @@ interface Props {
 export const SettingsModal: FC<Props> = ({ open, onClose }) => {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [claudeBinaryPath, setClaudeBinaryPath] = useState('');
+  const [notifyOnAwaitingInput, setNotifyOnAwaitingInput] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export const SettingsModal: FC<Props> = ({ open, onClose }) => {
       if (cancelled) return;
       setSettings(s);
       setClaudeBinaryPath(s.claudeBinaryPath ?? '');
+      setNotifyOnAwaitingInput(s.notifyOnAwaitingInput);
     });
     return () => {
       cancelled = true;
@@ -39,7 +41,7 @@ export const SettingsModal: FC<Props> = ({ open, onClose }) => {
   const onSave = async () => {
     setSaving(true);
     try {
-      const next = await invoke('settings:update', { claudeBinaryPath });
+      const next = await invoke('settings:update', { claudeBinaryPath, notifyOnAwaitingInput });
       setSettings(next);
       onClose();
     } finally {
@@ -68,6 +70,20 @@ export const SettingsModal: FC<Props> = ({ open, onClose }) => {
           <p className="mt-1 text-xs text-slate-500">
             Leave blank to look up <code>claude</code> on your PATH.
           </p>
+        </label>
+        <label className="mt-4 flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={notifyOnAwaitingInput}
+            onChange={(e) => setNotifyOnAwaitingInput(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-950 accent-blue-500"
+          />
+          <span>
+            <span className="block text-slate-200">Desktop notifications on awaiting-input</span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              Show a system notification when a session starts asking for confirmation.
+            </span>
+          </span>
         </label>
         <div className="mt-5 flex justify-end gap-2">
           <button
