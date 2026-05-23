@@ -57,5 +57,18 @@ describe('IPC contract', () => {
     }>();
     expectTypeOf<IpcEventPayload<'session:exit'>>().toEqualTypeOf<{ id: string; code: number }>();
     expectTypeOf<IpcEventPayload<'session:added'>>().toEqualTypeOf<{ session: Session }>();
+    expectTypeOf<IpcEventPayload<'session:removed'>>().toEqualTypeOf<{ id: string }>();
+  });
+
+  it('session:replayBuffer returns the rolling buffer as a string', () => {
+    expectTypeOf<IpcRequest<'session:replayBuffer'>>().toEqualTypeOf<{ id: string }>();
+    expectTypeOf<IpcResponse<'session:replayBuffer'>>().toEqualTypeOf<string>();
+  });
+
+  it('session:close and session:closeAll are fire-and-forget', () => {
+    expectTypeOf<IpcRequest<'session:close'>>().toEqualTypeOf<{ id: string }>();
+    expectTypeOf<IpcResponse<'session:close'>>().toEqualTypeOf<undefined>();
+    expectTypeOf<IpcRequest<'session:closeAll'>>().toEqualTypeOf<undefined>();
+    expectTypeOf<IpcResponse<'session:closeAll'>>().toEqualTypeOf<undefined>();
   });
 });

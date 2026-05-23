@@ -52,9 +52,10 @@ class RollingBuffer {
     if (!this.filled) {
       return this.buf.subarray(0, this.cursor).toString('utf8');
     }
-    return Buffer.concat([this.buf.subarray(this.cursor), this.buf.subarray(0, this.cursor)]).toString(
-      'utf8',
-    );
+    return Buffer.concat([
+      this.buf.subarray(this.cursor),
+      this.buf.subarray(0, this.cursor),
+    ]).toString('utf8');
   }
 }
 

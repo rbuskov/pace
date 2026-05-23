@@ -1,4 +1,4 @@
-import { type FC, useEffect } from 'react';
+import { type FC, useEffect, useRef } from 'react';
 
 interface Props {
   open: boolean;
@@ -21,6 +21,8 @@ export const ConfirmDialog: FC<Props> = ({
   onConfirm,
   onCancel,
 }) => {
+  const confirmRef = useRef<HTMLButtonElement | null>(null);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -30,6 +32,8 @@ export const ConfirmDialog: FC<Props> = ({
       }
     };
     window.addEventListener('keydown', onKey);
+    // Focus the confirm button on open so Enter triggers the primary action.
+    queueMicrotask(() => confirmRef.current?.focus());
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onCancel]);
 
@@ -62,9 +66,9 @@ export const ConfirmDialog: FC<Props> = ({
             {cancelLabel}
           </button>
           <button
+            ref={confirmRef}
             type="button"
             onClick={onConfirm}
-            autoFocus
             className={`rounded px-3 py-1.5 text-sm font-medium text-white ${
               destructive ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
             }`}
