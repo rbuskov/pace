@@ -127,3 +127,9 @@ temp/
 
 # Auto-updater
 dev-app-update.yml
+
+# Gas Town / polecat runtime — local overlay, never tracked.
+CLAUDE.md
+.beads/
+.claude/
+.runtime/
