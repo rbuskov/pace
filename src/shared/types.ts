@@ -53,11 +53,18 @@ export interface IpcIntents {
   'repo:select': { request: { path: string }; response: RepoInfo };
   'repo:current': { request: undefined; response: RepoInfo | null };
   'session:create': {
-    request: { name: string; baseBranch: string; initialPrompt?: string };
+    request: {
+      name: string;
+      baseBranch: string;
+      initialPrompt?: string;
+      cols: number;
+      rows: number;
+    };
     response: Session;
   };
   'session:list': { request: undefined; response: Session[] };
   'session:sendInput': { request: { id: string; text: string }; response: undefined };
+  'session:resize': { request: { id: string; cols: number; rows: number }; response: undefined };
   'session:resume': { request: { id: string }; response: Session };
   'session:forget': { request: { id: string }; response: undefined };
   'session:replayBuffer': { request: { id: string }; response: string };

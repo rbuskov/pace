@@ -4,6 +4,7 @@ import { BrowserWindow, app, ipcMain } from 'electron';
 import * as claudeResolver from './claude-resolver.js';
 import { registerAll } from './ipc/index.js';
 import * as persistence from './persistence.js';
+import * as sessionManager from './session-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +34,18 @@ if (!gotLock) {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
   });
+
+  // Terminate all live PTYs before the process exits. Electron waits for the
+  // promise we return from before-quit's preventDefault dance.
+  let quitting = false;
+  app.on('before-quit', (event) => {
+    if (quitting) return;
+    event.preventDefault();
+    quitting = true;
+    void sessionManager.shutdownAll().finally(() => {
+      app.quit();
+    });
+  });
 }
 
 function createMainWindow(): void {
@@ -52,6 +65,7 @@ function createMainWindow(): void {
   });
 
   claudeResolver.setMainWindow(win);
+  sessionManager.setMainWindow(win);
 
   win.on('ready-to-show', () => {
     win.show();
@@ -59,6 +73,7 @@ function createMainWindow(): void {
 
   win.on('closed', () => {
     claudeResolver.setMainWindow(null);
+    sessionManager.setMainWindow(null);
   });
 
   const devServerUrl = process.env.ELECTRON_RENDERER_URL;
